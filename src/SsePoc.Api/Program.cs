@@ -31,5 +31,9 @@ app.MapOpenApi();
 app.MapControllers();
 
 app.UseHttpsRedirection();
+app.UseCors(config => config
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 
 await app.RunAsync();

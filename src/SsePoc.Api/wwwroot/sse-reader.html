@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="utf-8"/>
+    <title></title>
+</head>
+<body>
+<div id="notifications-container"></div>
+</body>
+<script>
+    const manualEventSource = 'https://localhost:7095/api/notifications/manual';
+    const eventSource = new EventSource(manualEventSource);
+
+    eventSource.onmessage = (event) => {
+        const eventData = JSON.parse(event.data);
+
+        let notificationsContainer = document.getElementById('notifications-container');
+        let productElement = document.createElement('div');
+        productElement.innerText = `Name: ${eventData.Name}`;
+
+        notificationsContainer.appendChild(productElement);
+    }
+
+    eventSource.onerror = (error) => {
+        console.error("EventSource error:", error);
+        eventSource.close();
+    };
+</script>
+</html>
