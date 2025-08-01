@@ -2,6 +2,7 @@
 using SsePoc.Api.Application.Commands;
 using SsePoc.Api.Infrastructure.Data;
 using System.Net.Mime;
+using System.Threading.Channels;
 
 namespace SsePoc.Api.Application.Controllers;
 
@@ -9,7 +10,7 @@ namespace SsePoc.Api.Application.Controllers;
 [Route("api/[controller]")]
 [Consumes(MediaTypeNames.Application.Json)]
 [Produces(MediaTypeNames.Application.Json)]
-public class ProductsController(ApplicationDbContext dbContext) : ControllerBase
+public class ProductsController(ApplicationDbContext dbContext, Channel<Product> channel) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -35,6 +36,8 @@ public class ProductsController(ApplicationDbContext dbContext) : ControllerBase
 
         dbContext.Products.Add(product);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await channel.Writer.WriteAsync(product, cancellationToken);
 
         return Created();
     }

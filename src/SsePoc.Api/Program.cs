@@ -1,4 +1,5 @@
 using SsePoc.Api.Infrastructure.Data;
+using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options
     .EnableSensitiveDataLogging()
     .UseSnakeCaseNamingConvention()
     .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddSingleton(_ =>
+{
+    var options = new UnboundedChannelOptions
+    {
+        SingleReader = false,
+        SingleWriter = false,
+        AllowSynchronousContinuations = false
+    };
+
+    return Channel.CreateUnbounded<Product>(options);
+});
 
 var app = builder.Build();
 
