@@ -39,20 +39,20 @@ public class NotificationsController(Channel<Product> channel) : ControllerBase
         return TypedResults.ServerSentEvents((GetProductsAsync(cancellationToken)), eventType: "product");
     }
 
-    private async IAsyncEnumerable<Product> GetProductsAsync([EnumeratorCancellation] CancellationToken enumeratorCancellationToken)
+    private async IAsyncEnumerable<Product> GetProductsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var reader = channel.Reader;
-        while (!enumeratorCancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             if (reader is { CanCount: true, Count: > 0 })
             {
                 while (reader.Count > 0)
                 {
-                    yield return await reader.ReadAsync(enumeratorCancellationToken);
+                    yield return await reader.ReadAsync(cancellationToken);
                 }
             }
 
-            await Task.Delay(500, enumeratorCancellationToken);
+            await Task.Delay(500, cancellationToken);
         }
     }
 }
