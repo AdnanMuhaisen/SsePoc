@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using System.Net.Mime;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Channels;
 
@@ -11,7 +13,7 @@ namespace SsePoc.Api.Application.Controllers;
 public class NotificationsController(Channel<Product> channel) : ControllerBase
 {
     [HttpGet("manual")]
-    public async Task Send(CancellationToken cancellationToken)
+    public async Task SendManual(CancellationToken cancellationToken)
     {
         var reader = channel.Reader;
         HttpContext.Response.Headers.Append(HeaderNames.ContentType, MediaTypeNames.Text.EventStream);
@@ -28,6 +30,29 @@ public class NotificationsController(Channel<Product> channel) : ControllerBase
             }
 
             await Task.Delay(500, cancellationToken);
+        }
+    }
+
+    [HttpGet]
+    public ServerSentEventsResult<Product> Send(CancellationToken cancellationToken)
+    {
+        return TypedResults.ServerSentEvents((GetProductsAsync(cancellationToken)), eventType: "product");
+    }
+
+    private async IAsyncEnumerable<Product> GetProductsAsync([EnumeratorCancellation] CancellationToken enumeratorCancellationToken)
+    {
+        var reader = channel.Reader;
+        while (!enumeratorCancellationToken.IsCancellationRequested)
+        {
+            if (reader is { CanCount: true, Count: > 0 })
+            {
+                while (reader.Count > 0)
+                {
+                    yield return await reader.ReadAsync(enumeratorCancellationToken);
+                }
+            }
+
+            await Task.Delay(500, enumeratorCancellationToken);
         }
     }
 }

@@ -22,10 +22,10 @@ public class ProductsController(ApplicationDbContext dbContext, Channel<Product>
             return BadRequest(ModelState);
         }
 
-        //if (await dbContext.Products.AnyAsync(p => p.Name.ToLower() == command.Name.ToLower(), cancellationToken))
-        //{
-        //    return Problem(title: "DUPLICATED_PRODUCT", detail: "Product with the same name already exists", statusCode: StatusCodes.Status400BadRequest);
-        //}
+        if (await dbContext.Products.AnyAsync(p => p.Name.ToLower() == command.Name.ToLower(), cancellationToken))
+        {
+            return Problem(title: "DUPLICATED_PRODUCT", detail: "Product with the same name already exists", statusCode: StatusCodes.Status400BadRequest);
+        }
 
         var product = new Product
         {

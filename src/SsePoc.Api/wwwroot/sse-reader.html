@@ -8,18 +8,30 @@
 <div id="notifications-container"></div>
 </body>
 <script>
-    const manualEventSource = 'https://localhost:7095/api/notifications/manual';
-    const eventSource = new EventSource(manualEventSource);
+    const eventSourceUri = 'https://localhost:7095/api/notifications';
+    const manualEventSourceUri = 'https://localhost:7095/api/notifications/manual';
+    const eventSource = new EventSource(eventSourceUri);
 
+    function onMessageReceived(product) {
+        console.log(product);
+        let notificationsContainer = document.getElementById('notifications-container');
+        let notificationElement = document.createElement('div');
+        notificationElement.innerText = `Name: ${product.name}`;
+
+        notificationsContainer.appendChild(notificationElement);
+    }
+
+    // for manual SSE implementation
     eventSource.onmessage = (event) => {
         const eventData = JSON.parse(event.data);
-
-        let notificationsContainer = document.getElementById('notifications-container');
-        let productElement = document.createElement('div');
-        productElement.innerText = `Name: ${eventData.Name}`;
-
-        notificationsContainer.appendChild(productElement);
+        onMessageReceived(eventData);
     }
+
+    // for the SSE implementation provieded by .NET 10
+    eventSource.addEventListener('product', event => {
+        const eventData = JSON.parse(event.data);
+        onMessageReceived(eventData);
+    });
 
     eventSource.onerror = (error) => {
         console.error("EventSource error:", error);
